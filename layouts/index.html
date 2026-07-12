@@ -2,17 +2,81 @@
 
 <h1>{{ .Title }}</h1>
 {{ .Content }}
-{{ $paginator := .Paginate (where site.RegularPages "Type" "in" site.Params.mainSections) }}
 
-{{ range $paginator.Pages.ByPublishDate.Reverse }}
-  <h2 class="post-list {{ if ne .Params.show_summary false }}summary{{ end }}">
-    <a href="{{ .RelPermalink }}">
-      {{ .Title }}
-    </a>
-  </h2>
-  {{ if ne .Params.show_summary false }}
-    {{ .Summary }}
+{{ with site.Data.commits }}
+  {{ $commits := . }}
+  {{ $totalCommits := len $commits }}
+  
+  {{/* Show last 10 commits */}}
+  {{ $recentCommits := first 10 $commits }}
+  
+  {{ range $index, $commit := $recentCommits }}
+    <article class="commit-entry" style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #eee;">
+      <h2 style="margin-bottom: 0.5rem;">
+        <a href="https://github.com/ssmiller25/r15cookie-site/commit/{{ $commit.full_hash }}" 
+           style="text-decoration: none; color: inherit;"
+           target="_blank" rel="noopener">
+          {{ $commit.subject }}
+        </a>
+      </h2>
+      
+      <div class="commit-meta" style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+        <span class="commit-hash" style="font-family: monospace; background: #f4f4f4; padding: 2px 6px; border-radius: 3px;">
+          {{ $commit.short_hash }}
+        </span>
+        <span class="commit-date" style="margin-left: 1rem;">
+          {{ $commit.date }}
+        </span>
+        <span class="commit-author" style="margin-left: 1rem;">
+          by {{ $commit.author_name }}
+        </span>
+      </div>
+      
+      {{ if $commit.body }}
+        <div class="commit-body" style="margin: 1rem 0;">
+          {{ $commit.body | markdownify }}
+        </div>
+      {{ end }}
+      
+      {{ if $commit.changed_files_mapped }}
+        <div class="commit-files" style="margin-top: 1rem;">
+          <strong>Changed files:</strong>
+          <ul style="list-style: none; padding-left: 0; margin-top: 0.5rem;">
+            {{ range $file := $commit.changed_files_mapped }}
+              <li style="margin-bottom: 0.3rem;">
+                {{ if eq $file.type "page" }}
+                  <a href="{{ $file.url }}" style="text-decoration: none;">
+                    📄 {{ $file.file_path }}
+                  </a>
+                {{ else if eq $file.type "section" }}
+                  <a href="{{ $file.url }}" style="text-decoration: none;">
+                    📁 {{ $file.file_path }}
+                  </a>
+                {{ else }}
+                  <a href="{{ $file.url }}" style="text-decoration: none;" target="_blank" rel="noopener">
+                    🔗 {{ $file.file_path }} (GitHub)
+                  </a>
+                {{ end }}
+              </li>
+            {{ end }}
+          </ul>
+        </div>
+      {{ end }}
+    </article>
   {{ end }}
+  
+  {{ if gt $totalCommits 10 }}
+    <p style="margin-top: 2rem; color: #666;">
+      Showing last 10 commits. 
+      <a href="https://github.com/ssmiller25/r15cookie-site/commits/main" target="_blank" rel="noopener">
+        View all {{ $totalCommits }} commits on GitHub →
+      </a>
+    </p>
+  {{ end }}
+{{ else }}
+  <p style="color: #666; font-style: italic;">
+    No commit data available. Please run <code>make generate-commits</code> to generate commit data.
+  </p>
 {{ end }}
-{{ template "partials/pagination.html" . }}
+
 {{ end }}
