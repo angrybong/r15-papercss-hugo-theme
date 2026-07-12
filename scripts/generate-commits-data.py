@@ -86,18 +86,28 @@ def get_commits(limit: int = 100, content_only: bool = True) -> list[dict]:
         changed_files_output = run_git_command([
             "diff-tree",
             "--no-commit-id",
-            "--name-only",
+            "--name-status",
             "-r",
             full_hash
         ])
         
-        changed_files = [
-            f.strip() for f in changed_files_output.split("\n") if f.strip()
-        ]
+        # Parse name-status output: lines like "M\tfile.md" or "A\tfile.md"
+        changed_files = []
+        for line in changed_files_output.split("\n"):
+            if not line.strip():
+                continue
+            parts = line.split("\t")
+            if len(parts) >= 2:
+                status = parts[0].strip()
+                file_path = parts[1].strip()
+                changed_files.append({
+                    "path": file_path,
+                    "status": status  # A=Added, D=Deleted, M=Modified, R=Renamed
+                })
         
         # Only include commits that actually touch content/
         if content_only:
-            content_files = [f for f in changed_files if f.startswith("content/")]
+            content_files = [f for f in changed_files if f["path"].startswith("content/")]
             if not content_files:
                 continue  # Skip this commit
             changed_files = content_files  # Only show content files
@@ -111,6 +121,15 @@ def get_commits(limit: int = 100, content_only: bool = True) -> list[dict]:
             formatted_date = author_date
             iso_date = author_date
         
+        # Map status to human-readable and icon
+        status_map = {
+            "A": {"label": "Added", "icon": "➕"},
+            "D": {"label": "Deleted", "icon": "❌"},
+            "M": {"label": "Modified", "icon": "✏️"},
+            "R": {"label": "Renamed", "icon": "🔄"},
+            "C": {"label": "Copied", "icon": "📋"}
+        }
+        
         commits.append({
             "full_hash": full_hash,
             "short_hash": short_hash,
@@ -120,7 +139,8 @@ def get_commits(limit: int = 100, content_only: bool = True) -> list[dict]:
             "iso_date": iso_date,
             "subject": subject,
             "body": body,
-            "changed_files": changed_files
+            "changed_files": changed_files,
+            "status_map": status_map
         })
     
     return commits
@@ -193,10 +213,14 @@ def main():
     # Process commits and map file paths to URLs
     for commit in commits:
         mapped_files = []
-        for file_path in commit["changed_files"]:
+        for file_info in commit["changed_files"]:
+            file_path = file_info["path"]
+            status = file_info["status"]
             mapped = map_file_to_site_url(file_path, github_repo)
             if mapped:
                 mapped["file_path"] = file_path
+                mapped["status"] = status
+                mapped["status_info"] = commit["status_map"].get(status, {"label": status, "icon": "📄"})
                 mapped_files.append(mapped)
         
         commit["changed_files_mapped"] = mapped_files

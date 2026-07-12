@@ -76,13 +76,15 @@
                 <ul style="list-style: none; padding-left: 0; margin-top: 0.5rem;">
                   ${commit.changed_files_mapped.map(file => `
                     <li style="margin-bottom: 0.3rem;">
+                      <span style="margin-right: 0.5rem;" title="${file.status_info.label}">${file.status_info.icon}</span>
                       ${file.type === 'page' ? `
-                        <a href="${file.url}" style="text-decoration: none;">📄 ${file.file_path}</a>
+                        <a href="${file.url}" style="text-decoration: none;">${file.file_path}</a>
                       ` : file.type === 'section' ? `
-                        <a href="${file.url}" style="text-decoration: none;">📁 ${file.file_path}</a>
+                        <a href="${file.url}" style="text-decoration: none;">${file.file_path}</a>
                       ` : `
-                        <a href="${file.url}" style="text-decoration: none;" target="_blank" rel="noopener">🔗 ${file.file_path} (GitHub)</a>
+                        <a href="${file.url}" style="text-decoration: none;" target="_blank" rel="noopener">${file.file_path} (GitHub)</a>
                       `}
+                      <span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">${file.status_info.label}</span>
                     </li>
                   `).join('')}
                 </ul>
