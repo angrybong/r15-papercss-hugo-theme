@@ -27,6 +27,8 @@ params:
   # For more date formats see https://gohugo.io/functions/format/
   dateFormat: Jan 2, 2006
   navTitleLink: /
+  enable_search: true  # Enable search functionality
+  github_repo: "owner/repo"  # Used for commit links when the homepage shows git commits (see data/commits.json)
 
 menu:
   nav:
@@ -49,8 +51,17 @@ menu:
       url: /index.xml
       weight: 6
 
-markup:
-  defaultMarkdownHandler: goldmark
+outputs:
+  home:
+    - HTML
+    - SearchIndex
+
+outputFormats:
+  SearchIndex:
+    mediaType: application/json
+    baseName: search
+    isPlainText: true
+    notAlternative: true
   goldmark:
     extensions:
       definitionList: true
