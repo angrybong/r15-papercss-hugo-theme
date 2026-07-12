@@ -39,17 +39,32 @@ function initSearch() {
         }
         var results = fuse.search(query);
         resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = '';
         if (results.length === 0) {
-          resultsDiv.innerHTML = '<p>No results found.</p>';
+          var empty = document.createElement('p');
+          empty.textContent = 'No results found.';
+          resultsDiv.appendChild(empty);
           return;
         }
-        resultsDiv.innerHTML = results.map(function(result) {
+        results.forEach(function(result) {
           var item = result.item;
-          return '<div class="search-result">' +
-            '<a href="' + item.url + '"><strong>' + item.title + '</strong></a><br>' +
-            '<span>' + item.summary + '</span>' +
-            '</div>';
-        }).join('');
+          var entry = document.createElement('div');
+          entry.className = 'search-result';
+
+          var link = document.createElement('a');
+          link.href = item.url;
+          var strong = document.createElement('strong');
+          strong.textContent = item.title;
+          link.appendChild(strong);
+
+          var summary = document.createElement('span');
+          summary.textContent = item.summary;
+
+          entry.appendChild(link);
+          entry.appendChild(document.createElement('br'));
+          entry.appendChild(summary);
+          resultsDiv.appendChild(entry);
+        });
       });
     })
     .catch(function(err) {

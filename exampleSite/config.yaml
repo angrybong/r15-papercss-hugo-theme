@@ -28,6 +28,7 @@ params:
   dateFormat: Jan 2, 2006
   navTitleLink: /
   enable_search: true  # Enable search functionality
+  github_repo: "owner/repo"  # Used for commit links when the homepage shows git commits (see data/commits.json)
 
 menu:
   nav:
