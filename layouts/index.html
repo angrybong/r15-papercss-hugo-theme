@@ -3,8 +3,8 @@
 <h1>{{ .Title }}</h1>
 {{ .Content }}
 
-{{ with site.Data.commits }}
-  {{ $commits := . }}
+{{ if site.Data.commits }}
+  {{ $commits := site.Data.commits }}
   {{ $totalCommits := len $commits }}
   
   <div id="commits-container">
@@ -44,11 +44,6 @@
         // Build GitHub commit URL dynamically from config
         const commitUrl = githubRepo ? 
           `https://github.com/${githubRepo}/commit/${commit.full_hash}` : 
-          '#';
-        
-        // Build GitHub commits list URL
-        const commitsListUrl = githubRepo ? 
-          `https://github.com/${githubRepo}/commits/main` : 
           '#';
         
         html += `
@@ -135,9 +130,20 @@
   </script>
   
 {{ else }}
-  <p style="color: #666; font-style: italic;">
-    No commit data available. Please run <code>make generate-commits</code> to generate commit data.
-  </p>
+  {{/* Fallback: Show regular content (blog posts or _index.md content) */}}
+  {{ $paginator := .Paginate (where site.RegularPages "Type" "in" site.Params.mainSections) }}
+  
+  {{ range $paginator.Pages.ByPublishDate.Reverse }}
+    <h2 class="post-list {{ if ne .Params.show_summary false }}summary{{ end }}">
+      <a href="{{ .RelPermalink }}">
+        {{ .Title }}
+      </a>
+    </h2>
+    {{ if ne .Params.show_summary false }}
+      {{ .Summary }}
+    {{ end }}
+  {{ end }}
+  {{ template "partials/pagination.html" . }}
 {{ end }}
 
 {{ end }}
