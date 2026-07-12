@@ -29,6 +29,9 @@
     const commitsPerPage = 10;
     let currentPage = 1;
     
+    // Get GitHub repo from Hugo config (set in site's config.yaml)
+    const githubRepo = {{ site.Params.github_repo | default "" | jsonify | safeJS }};
+    
     function renderCommits() {
       const container = document.getElementById('commits-list');
       const startIndex = (currentPage - 1) * commitsPerPage;
@@ -38,10 +41,20 @@
       let html = '';
       
       pageCommits.forEach(commit => {
+        // Build GitHub commit URL dynamically from config
+        const commitUrl = githubRepo ? 
+          `https://github.com/${githubRepo}/commit/${commit.full_hash}` : 
+          '#';
+        
+        // Build GitHub commits list URL
+        const commitsListUrl = githubRepo ? 
+          `https://github.com/${githubRepo}/commits/main` : 
+          '#';
+        
         html += `
           <article class="commit-entry" style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #eee;">
             <h2 style="margin-bottom: 0.5rem;">
-              <a href="https://github.com/ssmiller25/r15cookie-site/commit/${commit.full_hash}" 
+              <a href="${commitUrl}" 
                  style="text-decoration: none; color: inherit;"
                  target="_blank" rel="noopener">
                 ${commit.subject}
@@ -60,7 +73,7 @@
               </span>
             </div>
             
-            ${commit.body ? `<div class="commit-body" style="margin: 1rem 0;">${commit.body.replace(/\n/g, '<br>')}</div>` : ''}
+            ${commit.body ? `<div class="commit-body" style="margin: 1rem 0;">${commit.body.replace(/\\n/g, '<br>')}</div>` : ''}
             
             ${commit.changed_files_mapped && commit.changed_files_mapped.length > 0 ? `
               <div class="commit-files" style="margin-top: 1rem;">
