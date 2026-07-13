@@ -10,7 +10,7 @@
     </a>
   </h2>
   {{ if ne .Params.show_summary false }}
-    {{ .Summary }}
+    <p class="post-summary">{{ .Description | default (.Summary | plainify) | truncate 240 }}</p>
   {{ end }}
 {{ end }}
 {{ end }}

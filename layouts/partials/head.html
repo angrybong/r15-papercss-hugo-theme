@@ -6,15 +6,11 @@
   {{ hugo.Generator }}
   <link rel="canonical" href="{{ .Permalink }}">
 
-  {{ if .IsHome }}
-    {{ with .Site.Params.homeMetaContent }}
-      <meta name="description" content="{{ . | plainify }}">
-    {{ end }}
-  {{ else }}
-    {{ $summary := trim (.Summary | plainify | htmlUnescape) "\n\r"
-      | default .Title }}
-    <meta name="description" content="{{ $summary }}">
-  {{ end }}
+  {{ $description := .Description | default .Summary | default site.Params.homeMetaContent | plainify | htmlUnescape | strings.TrimSpace }}
+  <meta name="description" content="{{ $description }}">
+  {{ with site.Params.googleSiteVerification }}<meta name="google-site-verification" content="{{ . }}">{{ end }}
+  {{ template "_internal/opengraph.html" . }}
+  {{ template "_internal/twitter_cards.html" . }}
 
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -39,4 +35,23 @@
     {{ $title = .Site.Title }}
   {{ end }}
   <title>{{ $title }}</title>
+
+  {{ with .OutputFormats.Get "rss" }}
+    <link rel="alternate" type="application/rss+xml" title="{{ site.Title }}" href="{{ .Permalink }}">
+  {{ end }}
+
+  {{ if .IsPage }}
+    {{ $author := site.Params.author.name | default site.Title }}
+    {{ $schema := dict
+      "@context" "https://schema.org"
+      "@type" "BlogPosting"
+      "headline" .Title
+      "description" $description
+      "url" .Permalink
+      "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
+      "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+      "author" (dict "@type" "Person" "name" $author)
+    }}
+    <script type="application/ld+json">{{ $schema | jsonify | safeJS }}</script>
+  {{ end }}
 </head>
